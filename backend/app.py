@@ -1,7 +1,5 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-import os
-import json
 import logging
 from datetime import datetime
 
@@ -20,7 +18,7 @@ class SmartProductAnalyzer:
         """بحث ذكي في منصات متعددة"""
         logger.info(f"بحث عن: {query} في {platform} للسوق {country}")
         
-        # بيانات تجريبية شاملة - يمكن استبدالها بـ APIs حقيقية
+        # بيانات تجريبية شاملة
         sample_products = self.generate_sample_data(query, country, platform)
         return sample_products
     
@@ -108,10 +106,714 @@ class SmartProductAnalyzer:
 # تهيئة المحلل
 analyzer = SmartProductAnalyzer()
 
+# الواجهة الرئيسية
 @app.route('/')
 def serve_frontend():
-    return send_from_directory('frontend', 'index.html')
+    return """
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>المحلل الذكي للمنتجات الرابحة</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
 
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                direction: rtl;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+
+            .header {
+                text-align: center;
+                color: white;
+                margin-bottom: 40px;
+            }
+
+            .header h1 {
+                font-size: 2.5rem;
+                margin-bottom: 10px;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
+
+            .header p {
+                font-size: 1.2rem;
+                opacity: 0.9;
+            }
+
+            .search-section {
+                background: white;
+                border-radius: 20px;
+                padding: 40px;
+                box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+                margin-bottom: 30px;
+            }
+
+            .search-box input {
+                width: 100%;
+                padding: 15px 20px;
+                border: 2px solid #e1e5e9;
+                border-radius: 12px;
+                font-size: 1.1rem;
+                margin-bottom: 20px;
+                transition: all 0.3s ease;
+            }
+
+            .search-box input:focus {
+                outline: none;
+                border-color: #4CAF50;
+                box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+            }
+
+            .filters {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                margin-bottom: 25px;
+            }
+
+            .filter-group {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .filter-group label {
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: #333;
+            }
+
+            .filter-group select {
+                padding: 12px 15px;
+                border: 2px solid #e1e5e9;
+                border-radius: 8px;
+                font-size: 1rem;
+                background: white;
+            }
+
+            .analyze-btn {
+                width: 100%;
+                padding: 15px;
+                background: linear-gradient(135deg, #4CAF50, #45a049);
+                color: white;
+                border: none;
+                border-radius: 12px;
+                font-size: 1.2rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .analyze-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+            }
+
+            .loading-spinner {
+                width: 20px;
+                height: 20px;
+                border: 2px solid transparent;
+                border-top: 2px solid white;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+
+            .loading-section {
+                background: white;
+                border-radius: 20px;
+                padding: 60px 40px;
+                text-align: center;
+                margin-bottom: 30px;
+                display: none;
+            }
+
+            .spinner {
+                width: 50px;
+                height: 50px;
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #4CAF50;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 20px;
+            }
+
+            .results-section {
+                background: white;
+                border-radius: 20px;
+                padding: 30px;
+                margin-bottom: 30px;
+                display: none;
+            }
+
+            .results-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 30px;
+                padding-bottom: 15px;
+                border-bottom: 2px solid #f0f0f0;
+            }
+
+            .results-header h2 {
+                color: #333;
+                font-size: 1.8rem;
+            }
+
+            .results-info {
+                display: flex;
+                gap: 20px;
+                color: #666;
+            }
+
+            .product-card {
+                background: #f8f9fa;
+                border-radius: 15px;
+                padding: 25px;
+                margin-bottom: 25px;
+                border-right: 5px solid #4CAF50;
+                transition: all 0.3s ease;
+            }
+
+            .product-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            }
+
+            .product-header {
+                display: flex;
+                gap: 20px;
+                margin-bottom: 20px;
+                align-items: start;
+            }
+
+            .product-image {
+                width: 150px;
+                height: 150px;
+                border-radius: 10px;
+                object-fit: cover;
+                border: 3px solid white;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
+
+            .product-basic-info {
+                flex: 1;
+            }
+
+            .product-name {
+                font-size: 1.4rem;
+                color: #333;
+                margin-bottom: 10px;
+            }
+
+            .product-description {
+                color: #666;
+                line-height: 1.6;
+                margin-bottom: 15px;
+            }
+
+            .detail-section {
+                background: white;
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 15px;
+                border-right: 3px solid #e9ecef;
+            }
+
+            .detail-section h4 {
+                color: #4CAF50;
+                margin-bottom: 15px;
+                font-size: 1.1rem;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .detail-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 15px;
+            }
+
+            .detail-item {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .detail-label {
+                font-weight: 600;
+                color: #555;
+                font-size: 0.9rem;
+            }
+
+            .detail-value {
+                color: #333;
+                line-height: 1.5;
+            }
+
+            .profit-badge {
+                background: #4CAF50;
+                color: white;
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 0.8rem;
+                font-weight: 600;
+            }
+
+            .tips-list {
+                list-style: none;
+                padding: 0;
+            }
+
+            .tips-list li {
+                padding: 8px 0;
+                border-bottom: 1px solid #f0f0f0;
+                display: flex;
+                align-items: start;
+                gap: 10px;
+            }
+
+            .tips-list li:before {
+                content: "💡";
+                font-size: 1.1rem;
+            }
+
+            .error-section {
+                background: white;
+                border-radius: 20px;
+                padding: 40px;
+                text-align: center;
+                margin-bottom: 30px;
+                display: none;
+            }
+
+            .error-card {
+                max-width: 400px;
+                margin: 0 auto;
+            }
+
+            .error-card h3 {
+                color: #f44336;
+                margin-bottom: 15px;
+            }
+
+            .error-card button {
+                background: #f44336;
+                color: white;
+                border: none;
+                padding: 12px 25px;
+                border-radius: 8px;
+                cursor: pointer;
+                margin-top: 15px;
+            }
+
+            @media (max-width: 768px) {
+                .container {
+                    padding: 15px;
+                }
+                
+                .search-section {
+                    padding: 25px;
+                }
+                
+                .filters {
+                    grid-template-columns: 1fr;
+                }
+                
+                .product-header {
+                    flex-direction: column;
+                }
+                
+                .product-image {
+                    width: 100%;
+                    height: 200px;
+                }
+                
+                .detail-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <!-- الهيدر -->
+            <header class="header">
+                <h1>🎯 المحلل الذكي للمنتجات الرابحة</h1>
+                <p>اكتشف أفضل المنتجات ربحية في السوق خلال دقائق</p>
+            </header>
+
+            <!-- قسم البحث -->
+            <section class="search-section">
+                <div class="search-box">
+                    <input type="text" id="query" placeholder="ما نوع المنتج الذي تبحث عنه؟ (مثال: ساعات ذكية، أجهزة رياضية، إكسسوارات)...">
+                    
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label>السوق المستهدف:</label>
+                            <select id="country">
+                                <option value="sa">🇸🇦 السعودية</option>
+                                <option value="eg">🇪🇬 مصر</option>
+                                <option value="ae">🇦🇪 الإمارات</option>
+                                <option value="global">🌍 عالمي</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>منصة البيع:</label>
+                            <select id="platform">
+                                <option value="all">جميع المنصات</option>
+                                <option value="amazon">أمازون</option>
+                                <option value="aliexpress">علي اكسبريس</option>
+                                <option value="noon">نون</option>
+                                <option value="tiktok">تيك توك</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button id="analyzeBtn" class="analyze-btn">
+                        <span class="btn-text">🔍 ابدأ التحليل الذكي</span>
+                        <div class="loading-spinner" style="display: none;"></div>
+                    </button>
+                </div>
+            </section>
+
+            <!-- حالة التحميل -->
+            <div id="loadingSection" class="loading-section">
+                <div class="loading-content">
+                    <div class="spinner"></div>
+                    <h3>جاري البحث والتحليل...</h3>
+                    <p>نبحث في أفضل المنصات ونحلل فرص الربح لك</p>
+                </div>
+            </div>
+
+            <!-- النتائج -->
+            <section id="resultsSection" class="results-section">
+                <div class="results-header">
+                    <h2>نتائج التحليل</h2>
+                    <div class="results-info">
+                        <span id="resultsCount">0 منتج</span>
+                        <span id="searchQuery"></span>
+                    </div>
+                </div>
+                <div id="resultsContainer" class="results-container"></div>
+            </section>
+
+            <!-- قسم الأخطاء -->
+            <div id="errorSection" class="error-section">
+                <div class="error-card">
+                    <h3>⚠️ حدث خطأ</h3>
+                    <p id="errorMessage"></p>
+                    <button onclick="hideError()">حاول مرة أخرى</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // إعدادات API
+            const API_BASE_URL = window.location.origin;
+
+            // عناصر DOM
+            const elements = {
+                queryInput: document.getElementById('query'),
+                countrySelect: document.getElementById('country'),
+                platformSelect: document.getElementById('platform'),
+                analyzeBtn: document.getElementById('analyzeBtn'),
+                loadingSection: document.getElementById('loadingSection'),
+                resultsSection: document.getElementById('resultsSection'),
+                resultsContainer: document.getElementById('resultsContainer'),
+                resultsCount: document.getElementById('resultsCount'),
+                searchQuery: document.getElementById('searchQuery'),
+                errorSection: document.getElementById('errorSection'),
+                errorMessage: document.getElementById('errorMessage')
+            };
+
+            // استمع لضغط Enter في حقل البحث
+            elements.queryInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    analyzeProducts();
+                }
+            });
+
+            // زر التحليل
+            elements.analyzeBtn.addEventListener('click', analyzeProducts);
+
+            async function analyzeProducts() {
+                const query = elements.queryInput.value.trim();
+                
+                if (!query) {
+                    showError('يرجى إدخال نوع المنتج الذي تريد البحث عنه');
+                    return;
+                }
+
+                // إظهار حالة التحميل
+                showLoading(true);
+                hideResults();
+                hideError();
+
+                try {
+                    const response = await fetch(API_BASE_URL + '/api/analyze', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            query: query,
+                            country: elements.countrySelect.value,
+                            platform: elements.platformSelect.value
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'حدث خطأ في الخادم');
+                    }
+
+                    if (!data.success) {
+                        throw new Error(data.error || 'فشل في التحليل');
+                    }
+
+                    // عرض النتائج
+                    displayResults(data);
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    showError(error.message);
+                } finally {
+                    showLoading(false);
+                }
+            }
+
+            function displayResults(data) {
+                elements.resultsCount.textContent = data.products_count + ' منتج';
+                elements.searchQuery.textContent = 'عنوان البحث: ' + data.query;
+                
+                elements.resultsContainer.innerHTML = '';
+                
+                data.products.forEach((product, index) => {
+                    const productCard = createProductCard(product, index + 1);
+                    elements.resultsContainer.appendChild(productCard);
+                });
+                
+                showResults();
+            }
+
+            function createProductCard(product, index) {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                
+                card.innerHTML = `
+                    <div class="product-header">
+                        <img src="${product.image}" alt="${product.name_ar}" class="product-image" 
+                             onerror="this.src='https://via.placeholder.com/300x200/667eea/white?text=صورة+المنتج'">
+                        
+                        <div class="product-basic-info">
+                            <h3 class="product-name">${index}. ${product.name_ar}</h3>
+                            <p class="product-description">${product.short_description}</p>
+                            
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px;">
+                                <span class="profit-badge">💰 هامش ربح: ${product.profit_analysis.profit_margin}</span>
+                                <span class="profit-badge" style="background: #2196F3;">📊 ${product.difficulty}</span>
+                                <span class="profit-badge" style="background: #FF9800;">🎯 ${product.target}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>📊 المعلومات الأساسية</h4>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">الفئة:</span>
+                                <span class="detail-value">${product.category}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">سبب الربحية:</span>
+                                <span class="detail-value">${product.why_win}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">المشكلة التي يحلها:</span>
+                                <span class="detail-value">${product.problem}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>💰 تحليل الربحية</h4>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">سعر الشراء:</span>
+                                <span class="detail-value">${product.profit_analysis.purchase_price} ${product.profit_analysis.currency}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">سعر البيع المقترح:</span>
+                                <span class="detail-value">${product.profit_analysis.suggested_price} ${product.profit_analysis.currency}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">صافي الربح:</span>
+                                <span class="detail-value">${product.profit_analysis.net_profit} ${product.profit_analysis.currency}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>🎯 الجمهور المستهدف</h4>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">الفئة العمرية:</span>
+                                <span class="detail-value">${product.age_range}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">الجنس:</span>
+                                <span class="detail-value">${product.gender}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">الاهتمامات:</span>
+                                <span class="detail-value">${product.interests.join('، ')}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>📢 الاستراتيجية التسويقية</h4>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">منصة البيع:</span>
+                                <span class="detail-value">${product.marketing.platform}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">ميزانية الإعلان:</span>
+                                <span class="detail-value">${product.marketing.ad_budget}</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <span class="detail-label">النص الإعلاني:</span>
+                            <p style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-top: 8px; line-height: 1.5;">
+                                ${product.marketing.ad_copy}
+                            </p>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <span class="detail-label">الهاشتاقات:</span>
+                            <p style="color: #667eea; font-weight: 500; margin-top: 5px;">
+                                ${product.marketing.hashtags.join(' ')}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>📊 تحليل السوق</h4>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">مستوى المنافسة:</span>
+                                <span class="detail-value">${product.market_analysis.competition}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">حجم الطلب:</span>
+                                <span class="detail-value">${product.market_analysis.demand}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">توقعات النمو:</span>
+                                <span class="detail-value">${product.market_analysis.growth_prediction}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>⚡ نصائح الخبراء</h4>
+                        <ul class="tips-list">
+                            ${product.tips.map(tip => '<li>' + tip + '</li>').join('')}
+                        </ul>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4>🛒 معلومات الموردين</h4>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">مدة الشحن:</span>
+                                <span class="detail-value">${product.suppliers.shipping_days}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">حد الأدنى للطلب:</span>
+                                <span class="detail-value">${product.suppliers.min_order}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                return card;
+            }
+
+            function showLoading(show) {
+                const btnText = elements.analyzeBtn.querySelector('.btn-text');
+                const spinner = elements.analyzeBtn.querySelector('.loading-spinner');
+                
+                if (show) {
+                    btnText.textContent = 'جاري التحليل...';
+                    spinner.style.display = 'block';
+                    elements.analyzeBtn.disabled = true;
+                    elements.loadingSection.style.display = 'block';
+                } else {
+                    btnText.textContent = '🔍 ابدأ التحليل الذكي';
+                    spinner.style.display = 'none';
+                    elements.analyzeBtn.disabled = false;
+                    elements.loadingSection.style.display = 'none';
+                }
+            }
+
+            function showResults() {
+                elements.resultsSection.style.display = 'block';
+            }
+
+            function hideResults() {
+                elements.resultsSection.style.display = 'none';
+            }
+
+            function showError(message) {
+                elements.errorMessage.textContent = message;
+                elements.errorSection.style.display = 'block';
+            }
+
+            function hideError() {
+                elements.errorSection.style.display = 'none';
+            }
+
+            // اختبار اتصال API عند التحميل
+            window.addEventListener('load', async () => {
+                try {
+                    const response = await fetch(API_BASE_URL + '/api/health');
+                    if (!response.ok) throw new Error('الخادم غير متاح');
+                    console.log('✅ النظام يعمل بشكل صحيح');
+                } catch (error) {
+                    console.warn('⚠️ تعذر الاتصال بالخادم:', error.message);
+                }
+            });
+        </script>
+    </body>
+    </html>
+    """
+
+# API Routes
 @app.route('/api/analyze', methods=['POST'])
 def api_analyze():
     try:
@@ -155,10 +857,6 @@ def health_check():
         "service": "Smart Product Analyzer",
         "timestamp": datetime.now().isoformat()
     })
-
-@app.route('/<path:path>')
-def serve_static(path):
-    return send_from_directory('frontend', path)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
