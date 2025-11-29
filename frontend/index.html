@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المحلل الذكي للمنتجات الرابحة</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- الهيدر -->
+        <header class="header">
+            <h1>🎯 المحلل الذكي للمنتجات الرابحة</h1>
+            <p>اكتشف أفضل المنتجات ربحية في السوق خلال دقائق</p>
+        </header>
+
+        <!-- قسم البحث -->
+        <section class="search-section">
+            <div class="search-box">
+                <input type="text" id="query" placeholder="ما نوع المنتج الذي تبحث عنه؟ (مثال: ساعات ذكية، أجهزة رياضية، إكسسوارات)...">
+                
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>السوق المستهدف:</label>
+                        <select id="country">
+                            <option value="sa">🇸🇦 السعودية</option>
+                            <option value="eg">🇪🇬 مصر</option>
+                            <option value="ae">🇦🇪 الإمارات</option>
+                            <option value="global">🌍 عالمي</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>منصة البيع:</label>
+                        <select id="platform">
+                            <option value="all">جميع المنصات</option>
+                            <option value="amazon">أمازون</option>
+                            <option value="aliexpress">علي اكسبريس</option>
+                            <option value="noon">نون</option>
+                            <option value="tiktok">تيك توك</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="analyzeBtn" class="analyze-btn">
+                    <span class="btn-text">🔍 ابدأ التحليل الذكي</span>
+                    <div class="loading-spinner" style="display: none;"></div>
+                </button>
+            </div>
+        </section>
+
+        <!-- حالة التحميل -->
+        <div id="loadingSection" class="loading-section" style="display: none;">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <h3>جاري البحث والتحليل...</h3>
+                <p>نبحث في أفضل المنصات ونحلل فرص الربح لك</p>
+            </div>
+        </div>
+
+        <!-- النتائج -->
+        <section id="resultsSection" class="results-section" style="display: none;">
+            <div class="results-header">
+                <h2>نتائج التحليل</h2>
+                <div class="results-info">
+                    <span id="resultsCount">0 منتج</span>
+                    <span id="searchQuery"></span>
+                </div>
+            </div>
+            <div id="resultsContainer" class="results-container"></div>
+        </section>
+
+        <!-- قسم الأخطاء -->
+        <div id="errorSection" class="error-section" style="display: none;">
+            <div class="error-card">
+                <h3>⚠️ حدث خطأ</h3>
+                <p id="errorMessage"></p>
+                <button onclick="hideError()">حاول مرة أخرى</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
