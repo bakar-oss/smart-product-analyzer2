@@ -27,25 +27,94 @@ class SmartProductAnalyzer:
     def __init__(self):
         self.supported_platforms = ['amazon', 'aliexpress', 'noon', 'all']
         
-def search_products(self, query, country, platform):
-    """بحث ذكي في منصات متعددة"""
-    logger.info(f"بحث عن: {query} في {platform} للسوق {country}")
+    def search_products(self, query, country, platform):
+        """بحث ذكي في منصات متعددة"""
+        logger.info(f"بحث عن: {query} في {platform} للسوق {country}")
+        
+        # في الوقت الحالي، استخدم البيانات التجريبية مباشرة
+        return self.generate_sample_data(query, country, platform)
     
-    # محاولة استخدام DeepSeek أولاً
-    try:
-        if DEEPSEEK_API_KEY:
-            ai_products = self.analyze_with_ai(query, country, platform)
-            if ai_products:
-                logger.info("✅ استخدام تحليل DeepSeek")
-                return ai_products
-            else:
-                logger.warning("⚠️ DeepSeek return None, استخدام البيانات التجريبية")
-    except Exception as e:
-        logger.warning(f"⚠️ فشل التحليل بـ DeepSeek: {str(e)}")
-    
-    # العودة للبيانات التجريبية إذا فشل API
-    logger.info("🔄 استخدام البيانات التجريبية")
-    return self.generate_sample_data(query, country, platform)
+    def generate_sample_data(self, query, country, platform):
+        """توليد بيانات منتجات تجريبية شاملة"""
+        products = []
+        
+        for i in range(5):
+            base_price = 100 if country == 'sa' else 500
+            currency = 'ريال' if country == 'sa' else 'جنيه'
+            
+            product = {
+                "id": f"{platform}-{i+1}",
+                "name_ar": f"{query} الذكي #{i+1}",
+                "name_en": f"Smart {query} #{i+1}",
+                "image": f"https://picsum.photos/300/200?random={i}",
+                "short_description": f"أحدث {query} في السوق بتقنيات متطورة وتصميم عصري",
+                "category": query,
+                "difficulty": "⭐" * (i % 3 + 1),
+                "why_win": "طلب مرتفع وتكلفة منخفضة وهامش ربح عالي",
+                "target": "شباب ومراهقين" if i % 2 == 0 else "عائلات ومحترفين",
+                "age_range": "18-35" if i % 2 == 0 else "25-45",
+                "gender": "ذكر" if i % 3 == 0 else "أنثى" if i % 3 == 1 else "كلا",
+                "interests": ["تسوق", "موضة", "تقنية", "لياقة بدنية"],
+                "problem": "يحل مشكلة الحاجة لمنتج عملي بجودة عالية وسعر معقول",
+                
+                "profit_analysis": {
+                    "purchase_price": base_price + (i * 20),
+                    "suggested_price": (base_price + (i * 20)) * 2,
+                    "profit_margin": "45%",
+                    "total_costs": (base_price + (i * 20)) * 0.3,
+                    "net_profit": (base_price + (i * 20)) * 0.7,
+                    "currency": currency
+                },
+                
+                "suppliers": {
+                    "local": [
+                        {
+                            "name": "مورد محلي #1",
+                            "contact": "0551234567",
+                            "link": "#"
+                        }
+                    ],
+                    "international": [
+                        {
+                            "name": "AliExpress",
+                            "link": "https://aliexpress.com",
+                            "min_order": "1 قطعة"
+                        }
+                    ],
+                    "shipping_days": "7-14 يوم",
+                    "min_order": "1 قطعة"
+                },
+                
+                "marketing": {
+                    "platform": "تيك توك وإنستغرام",
+                    "ad_copy": f"🔥 اكتشف أفضل {query} في السوق! 🔥\nجودة ممتازة ⭐ سعر لا يُنافس 🎯 توصيل سريع 🚚",
+                    "video_idea": "عرض عملي للمنتج مع مقارنة الأسعار والجودة",
+                    "hashtags": [f"#{query}", "#تسوق", "#عروض", "#جودة"],
+                    "ad_budget": f"{50 + i * 10} {currency}/يوم"
+                },
+                
+                "market_analysis": {
+                    "competition": "منخفض" if i % 3 == 0 else "متوسط" if i % 3 == 1 else "عالي",
+                    "demand": "مستمر" if i % 2 == 0 else "موسمي",
+                    "unique_point": "جودة عالية وسعر تنافسي وتصميم مميز",
+                    "growth_prediction": f"+{15 + i * 5}% خلال 2024"
+                },
+                
+                "tips": [
+                    "ركز على التسويق عبر منصات الفيديو القصيرة",
+                    "التقط صور احترافية للمنتج من زوايا متعددة",
+                    "قدم ضمان مجاني لأول 30 يوم",
+                    "استخدم التوصيل السريع كعامل تمييز"
+                ],
+                
+                "timestamp": datetime.now().isoformat(),
+                "source": platform,
+                "country": country,
+                "analyzed_by": "sample"
+            }
+            products.append(product)
+        
+        return products
     
 def analyze_with_ai(self, query, country, platform):
     """تحليل المنتجات باستخدام DeepSeek API"""
