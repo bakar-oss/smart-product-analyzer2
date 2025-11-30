@@ -14,7 +14,7 @@ app = Flask(__name__)
 CORS(app)
 
 # إعداد مفتاح OpenRouter - ضع مفتاحك هنا
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = ""
 
 class SmartProductAnalyzer:
     def __init__(self):
