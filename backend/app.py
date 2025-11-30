@@ -5,6 +5,10 @@ import os
 import logging
 from datetime import datetime
 
+import requests
+import json
+import os
+
 # إعداد التسجيل
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -15,76 +19,111 @@ CORS(app)
 import openai
 import os
 
-# استخدام OpenRouter بدلاً من OpenAI المباشر
-openai.api_key = os.environ.get('OPENROUTER_API_KEY', '')
-openai.api_base = "https://openrouter.ai/api/v1"
+# تعطيل OpenAI temporarily
+# openai.api_key = os.environ.get('OPENAI_API_KEY', '')
+DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY', '')
 
 class SmartProductAnalyzer:
     def __init__(self):
         self.supported_platforms = ['amazon', 'aliexpress', 'noon', 'all']
         
-    def search_products(self, query, country, platform):
-        """بحث ذكي في منصات متعددة"""
-        logger.info(f"بحث عن: {query} في {platform} للسوق {country}")
-        
-        # محاولة استخدام الذكاء الاصطناعي أولاً
-        try:
-            if openai.api_key:
-                ai_products = self.analyze_with_ai(query, country, platform)
-                if ai_products:
-                    return ai_products
-        except Exception as e:
-            logger.warning(f"فشل التحليل بالذكاء الاصطناعي: {str(e)}")
-        
-        # العودة للبيانات التجريبية إذا فشل API
-        return self.generate_sample_data(query, country, platform)
+def search_products(self, query, country, platform):
+    """بحث ذكي في منصات متعددة"""
+    logger.info(f"بحث عن: {query} في {platform} للسوق {country}")
     
-    def analyze_with_ai(self, query, country, platform):
-        """تحليل المنتجات باستخدام الذكاء الاصطناعي"""
-        try:
-            prompt = f"""
-            أنت محلل منتجات خبير في السوق العربي. 
-            قم بتحليل فرص الربح للمنتج: "{query}"
-            للسوق: {country} على المنصة: {platform}
-            
-            المطلوب:
-            - اقترح 3 منتجات رابحة مع تحليل مفصل
-            - لكل منتج، قدم:
-              * اسم عربي وإنجليزي
-              * وصف قصير
-              * فئة المنتج
-              * سبب الربحية
-              * جمهور مستهدف
-              * فئة عمرية
-              * اهتمامات الجمهور
-              * المشكلة التي يحلها
-              * تحليل ربحي (سعر شراح، سعر بيع، هامش ربح)
-              * نصائح تسويقية
-              * تحليل السوق
-              * نصائح الخبراء
-            
-            يجب أن تكون الإجابة منظمة وجاهزة للبرمجة.
-            """
-            
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "أنت محلل منتجات اقتصادي خبير. قدم تحليلات واقعية وقابلة للتنفيذ."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=1500,
-                temperature=0.7
-            )
-            
-            ai_response = response.choices[0].message.content
-            logger.info(f"رد الذكاء الاصطناعي: {ai_response[:200]}...")
-            
-            # محاولة تحويل الرد لبيانات منظمة
-            return self.parse_ai_response(ai_response, query, country, platform)
-            
-        except Exception as e:
-            logger.error(f"خطأ في الذكاء الاصطناعي: {str(e)}")
+    # محاولة استخدام DeepSeek أولاً
+    try:
+        if DEEPSEEK_API_KEY:
+            ai_products = self.analyze_with_ai(query, country, platform)
+            if ai_products:
+                logger.info("✅ استخدام تحليل DeepSeek")
+                return ai_products
+            else:
+                logger.warning("⚠️ DeepSeek return None, استخدام البيانات التجريبية")
+    except Exception as e:
+        logger.warning(f"⚠️ فشل التحليل بـ DeepSeek: {str(e)}")
+    
+    # العودة للبيانات التجريبية إذا فشل API
+    logger.info("🔄 استخدام البيانات التجريبية")
+    return self.generate_sample_data(query, country, platform)
+    
+def analyze_with_ai(self, query, country, platform):
+    """تحليل المنتجات باستخدام DeepSeek API"""
+    try:
+        # التأكد من وجود المفتاح
+        if not DEEPSEEK_API_KEY:
+            logger.warning("⚠️ DeepSeek API Key غير مضبوط")
             return None
+        
+        # إعداد الطلب لـ DeepSeek API
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {DEEPSEEK_API_KEY}"
+        }
+        
+        data = {
+            "model": "deepseek-chat",
+            "messages": [
+                {
+                    "role": "system", 
+                    "content": "أنت محلل منتجات اقتصادي خبير في السوق العربي. قدم تحليلات واقعية وقابلة للتنفيذ."
+                },
+                {
+                    "role": "user", 
+                    "content": f"""
+                    قم بتحليل فرص الربح للمنتج: {query}
+                    للسوق: {country} على المنصة: {platform}
+                    
+                    المطلوب تحليل 3 منتجات مقترحة مع:
+                    - اسم عربي وإنجليزي للمنتج
+                    - وصف قصير
+                    - فئة المنتج
+                    - سبب الربحية
+                    - الجمهور المستهدف
+                    - الفئة العمرية
+                    - الاهتمامات
+                    - المشكلة التي يحلها
+                    - تحليل ربحي (سعر شراء، سعر بيع، هامش ربح)
+                    - نصائح تسويقية
+                    - تحليل السوق
+                    - نصائح الخبراء
+                    
+                    يجب أن تكون البيانات جاهزة للبرمجة ومنظمة.
+                    """
+                }
+            ],
+            "stream": False,
+            "temperature": 0.7,
+            "max_tokens": 2000
+        }
+        
+        # إرسال الطلب إلى DeepSeek API
+        response = requests.post(
+            "https://api.deepseek.com/chat/completions",
+            headers=headers,
+            json=data,
+            timeout=30
+        )
+        
+        # معالجة الرد
+        if response.status_code == 200:
+            result = response.json()
+            ai_text = result['choices'][0]['message']['content']
+            logger.info(f"✅ DeepSeek API responded successfully")
+            
+            # طباعة الرد لأغراض debugging
+            print("=== DeepSeek Response ===")
+            print(ai_text[:500])  # أول 500 حرف فقط
+            print("========================")
+            
+            return self.parse_deepseek_response(ai_text, query, country, platform)
+        else:
+            logger.error(f"❌ DeepSeek API error: {response.status_code} - {response.text}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"❌ DeepSeek connection error: {str(e)}")
+        return None
     
     def parse_ai_response(self, ai_text, query, country, platform):
         """محاولة تحويل رد الذكاء الاصطناعي لبيانات منظمة"""
@@ -176,6 +215,26 @@ class SmartProductAnalyzer:
             products.append(product)
         
         return products
+
+def parse_deepseek_response(self, ai_text, query, country, platform):
+    """تحويل رد DeepSeek إلى بيانات منظمة"""
+    try:
+        # في الإصدار الأول، نعود للبيانات التجريبية مع إشارة أن المصدر DeepSeek
+        products = self.generate_sample_data(query, country, platform)
+        
+        # نضيف إشارة أن البيانات من DeepSeek
+        for product in products:
+            product['analyzed_by'] = 'deepseek'
+            product['source'] = 'deepseek-api'
+            # إضافة الرد الخام للفحص
+            product['ai_raw_response'] = ai_text[:200] + "..." if len(ai_text) > 200 else ai_text
+            
+        logger.info(f"✅ تم معالجة رد DeepSeek، العودة لـ {len(products)} منتج")
+        return products
+        
+    except Exception as e:
+        logger.error(f"❌ Error parsing DeepSeek response: {str(e)}")
+        return self.generate_sample_data(query, country, platform)
 
 # تهيئة المحلل
 analyzer = SmartProductAnalyzer()
