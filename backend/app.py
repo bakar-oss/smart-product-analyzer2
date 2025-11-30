@@ -12,8 +12,12 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-# إعداد مفتاح OpenAI من متغيرات البيئة
-openai.api_key = os.environ.get('OPENAI_API_KEY', '')
+import openai
+import os
+
+# استخدام OpenRouter بدلاً من OpenAI المباشر
+openai.api_key = os.environ.get('OPENROUTER_API_KEY', '')
+openai.api_base = "https://openrouter.ai/api/v1"
 
 class SmartProductAnalyzer:
     def __init__(self):
