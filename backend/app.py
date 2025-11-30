@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
@@ -12,8 +13,8 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-# إعداد مفتاح DeepSeek
-DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY', '')
+# إعداد مفتاح OpenRouter - ضع مفتاحك هنا
+OPENROUTER_API_KEY = "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"
 
 class SmartProductAnalyzer:
     def __init__(self):
@@ -23,76 +24,80 @@ class SmartProductAnalyzer:
         """بحث ذكي في منصات متعددة"""
         logger.info(f"بحث عن: {query} في {platform} للسوق {country}")
         
-        # محاولة استخدام DeepSeek أولاً
+        # محاولة استخدام OpenRouter أولاً
         try:
-            if DEEPSEEK_API_KEY:
-                logger.info("🔄 محاولة استخدام DeepSeek API...")
+            if OPENROUTER_API_KEY:
+                logger.info("🔄 محاولة استخدام OpenRouter API...")
                 ai_products = self.analyze_with_ai(query, country, platform)
                 if ai_products:
-                    logger.info("✅ تم استخدام تحليل DeepSeek بنجاح")
+                    logger.info("✅ تم استخدام تحليل الذكاء الاصطناعي بنجاح")
                     return ai_products
                 else:
-                    logger.warning("⚠️ DeepSeek return None, استخدام البيانات التجريبية")
+                    logger.warning("⚠️ الذكاء الاصطناعي return None, استخدام البيانات التجريبية")
         except Exception as e:
-            logger.warning(f"⚠️ فشل التحليل بـ DeepSeek: {str(e)}")
+            logger.warning(f"⚠️ فشل التحليل بالذكاء الاصطناعي: {str(e)}")
         
         # العودة للبيانات التجريبية إذا فشل API
         logger.info("🔄 استخدام البيانات التجريبية")
         return self.generate_sample_data(query, country, platform)
     
     def analyze_with_ai(self, query, country, platform):
-        """تحليل المنتجات باستخدام DeepSeek API"""
+        """تحليل المنتجات باستخدام OpenRouter API"""
         try:
             # التأكد من وجود المفتاح
-            if not DEEPSEEK_API_KEY:
-                logger.warning("⚠️ DeepSeek API Key غير مضبوط")
+            if not OPENROUTER_API_KEY:
+                logger.warning("⚠️ OpenRouter API Key غير مضبوط")
                 return None
             
-            # إعداد الطلب لـ DeepSeek API
+            # إعداد الطلب لـ OpenRouter API
             headers = {
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {DEEPSEEK_API_KEY}"
+                "HTTP-Referer": "https://localhost",
+                "X-Title": "Smart Product Analyzer"
             }
             
             data = {
-                "model": "deepseek-chat",
+                "model": "openai/gpt-3.5-turbo",
                 "messages": [
                     {
                         "role": "system", 
-                        "content": "أنت محلل منتجات اقتصادي خبير في السوق العربي. قدم تحليلات واقعية وقابلة للتنفيذ."
+                        "content": """أنت محلل منتجات اقتصادي خبير في السوق العربي. 
+قدم تحليلات واقعية وقابلة للتنفيذ للمنتجات الرابحة.
+أرجع البيانات في شكل منظم وجاهز للبرمجة."""
                     },
                     {
                         "role": "user", 
                         "content": f"""
-                        قم بتحليل فرص الربح للمنتج: {query}
-                        للسوق: {country} على المنصة: {platform}
-                        
-                        المطلوب تحليل 3 منتجات مقترحة مع:
-                        - اسم عربي وإنجليزي للمنتج
-                        - وصف قصير
-                        - فئة المنتج
-                        - سبب الربحية
-                        - الجمهور المستهدف
-                        - الفئة العمرية
-                        - الاهتمامات
-                        - المشكلة التي يحلها
-                        - تحليل ربحي (سعر شراء، سعر بيع، هامش ربح)
-                        - نصائح تسويقية
-                        - تحليل السوق
-                        - نصائح الخبراء
-                        
-                        يجب أن تكون البيانات جاهزة للبرمجة ومنظمة.
-                        """
+قم بتحليل فرص الربح للمنتج: {query}
+للأسواق العربية خاصة: {country} على المنصة: {platform}
+
+المطلوب تحليل 3 منتجات مقترحة مع البيانات التالية لكل منتج:
+- اسم عربي للمنتج
+- اسم إنجليزي للمنتج  
+- وصف قصير
+- فئة المنتج
+- سبب الربحية
+- الجمهور المستهدف
+- الفئة العمرية
+- الاهتمامات
+- المشكلة التي يحلها
+- تحليل ربحي (سعر شراء، سعر بيع، هامش ربح)
+- نصائح تسويقية
+- تحليل السوق
+- نصائح الخبراء
+
+يجب أن تكون البيانات واقعية وقابلة للتنفيذ في السوق العربي.
+"""
                     }
                 ],
-                "stream": False,
                 "temperature": 0.7,
                 "max_tokens": 2000
             }
             
-            # إرسال الطلب إلى DeepSeek API
+            # إرسال الطلب إلى OpenRouter API
             response = requests.post(
-                "https://api.deepseek.com/chat/completions",
+                "https://openrouter.ai/api/v1/chat/completions",
                 headers=headers,
                 json=data,
                 timeout=30
@@ -102,40 +107,40 @@ class SmartProductAnalyzer:
             if response.status_code == 200:
                 result = response.json()
                 ai_text = result['choices'][0]['message']['content']
-                logger.info(f"✅ DeepSeek API responded successfully")
+                logger.info(f"✅ OpenRouter API responded successfully")
                 
                 # طباعة الرد لأغراض debugging
-                print("=== DeepSeek Response ===")
+                print("=== OpenRouter Response ===")
                 print(ai_text[:500])  # أول 500 حرف فقط
                 print("========================")
                 
-                return self.parse_deepseek_response(ai_text, query, country, platform)
+                return self.parse_ai_response(ai_text, query, country, platform)
             else:
-                logger.error(f"❌ DeepSeek API error: {response.status_code} - {response.text}")
+                logger.error(f"❌ OpenRouter API error: {response.status_code} - {response.text}")
                 return None
                 
         except Exception as e:
-            logger.error(f"❌ DeepSeek connection error: {str(e)}")
+            logger.error(f"❌ OpenRouter connection error: {str(e)}")
             return None
     
-    def parse_deepseek_response(self, ai_text, query, country, platform):
-        """تحويل رد DeepSeek إلى بيانات منظمة"""
+    def parse_ai_response(self, ai_text, query, country, platform):
+        """تحويل رد الذكاء الاصطناعي إلى بيانات منظمة"""
         try:
-            # في الإصدار الأول، نعود للبيانات التجريبية مع إشارة أن المصدر DeepSeek
+            # في الإصدار الأول، نعود للبيانات التجريبية مع إشارة أن المصدر AI
             products = self.generate_sample_data(query, country, platform)
             
-            # نضيف إشارة أن البيانات من DeepSeek
+            # نضيف إشارة أن البيانات من الذكاء الاصطناعي
             for product in products:
-                product['analyzed_by'] = 'deepseek'
-                product['source'] = 'deepseek-api'
+                product['analyzed_by'] = 'openrouter'
+                product['source'] = 'ai-analysis'
                 # إضافة الرد الخام للفحص
                 product['ai_raw_response'] = ai_text[:200] + "..." if len(ai_text) > 200 else ai_text
                 
-            logger.info(f"✅ تم معالجة رد DeepSeek، العودة لـ {len(products)} منتج")
+            logger.info(f"✅ تم معالجة رد الذكاء الاصطناعي، العودة لـ {len(products)} منتج")
             return products
             
         except Exception as e:
-            logger.error(f"❌ Error parsing DeepSeek response: {str(e)}")
+            logger.error(f"❌ Error parsing AI response: {str(e)}")
             return self.generate_sample_data(query, country, platform)
     
     def generate_sample_data(self, query, country, platform):
@@ -214,7 +219,7 @@ class SmartProductAnalyzer:
                 "timestamp": datetime.now().isoformat(),
                 "source": platform,
                 "country": country,
-                "analyzed_by": "deepseek" if DEEPSEEK_API_KEY else "sample"
+                "analyzed_by": "openrouter" if OPENROUTER_API_KEY else "sample"
             }
             products.append(product)
         
@@ -590,7 +595,7 @@ def serve_frontend():
                 <h1>🎯 المحلل الذكي للمنتجات الرابحة</h1>
                 <p>اكتشف أفضل المنتجات ربحية في السوق خلال دقائق</p>
                 <div style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 10px; margin-top: 10px;">
-                    <span style="color: #4CAF50;">✓ نظام الذكاء الاصطناعي مفعل</span>
+                    <span style="color: #4CAF50;">✓ نظام الذكاء الاصطناعي مفعل (OpenRouter)</span>
                 </div>
             </header>
 
@@ -742,7 +747,7 @@ def serve_frontend():
                 elements.searchQuery.textContent = 'عنوان البحث: ' + data.query;
                 
                 // إظهار شارة AI إذا كان التحليل باستخدام الذكاء الاصطناعي
-                const hasAI = data.products.some(p => p.analyzed_by === 'deepseek');
+                const hasAI = data.products.some(p => p.analyzed_by === 'openrouter');
                 elements.aiBadge.style.display = hasAI ? 'inline-block' : 'none';
                 
                 elements.resultsContainer.innerHTML = '';
@@ -759,7 +764,7 @@ def serve_frontend():
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 
-                const aiBadge = product.analyzed_by === 'deepseek' ? 
+                const aiBadge = product.analyzed_by === 'openrouter' ? 
                     '<span class="ai-badge">تحليل بالذكاء الاصطناعي</span>' : '';
                 
                 card.innerHTML = `
@@ -994,7 +999,7 @@ def health_check():
         "status": "running",
         "service": "Smart Product Analyzer",
         "timestamp": datetime.now().isoformat(),
-        "deepseek_available": bool(DEEPSEEK_API_KEY)
+        "openrouter_available": bool(OPENROUTER_API_KEY)
     })
 
 if __name__ == '__main__':
