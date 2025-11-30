@@ -1,13 +1,9 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import openai
+import requests
 import os
 import logging
 from datetime import datetime
-
-import requests
-import json
-import os
 
 # إعداد التسجيل
 logging.basicConfig(level=logging.INFO)
@@ -16,11 +12,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-import openai
-import os
-
-# تعطيل OpenAI temporarily
-# openai.api_key = os.environ.get('OPENAI_API_KEY', '')
+# إعداد مفتاح DeepSeek
 DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY', '')
 
 class SmartProductAnalyzer:
@@ -31,176 +23,119 @@ class SmartProductAnalyzer:
         """بحث ذكي في منصات متعددة"""
         logger.info(f"بحث عن: {query} في {platform} للسوق {country}")
         
-        # في الوقت الحالي، استخدم البيانات التجريبية مباشرة
-        return self.generate_sample_data(query, country, platform)
-    
-    def generate_sample_data(self, query, country, platform):
-        """توليد بيانات منتجات تجريبية شاملة"""
-        products = []
-        
-        for i in range(5):
-            base_price = 100 if country == 'sa' else 500
-            currency = 'ريال' if country == 'sa' else 'جنيه'
-            
-            product = {
-                "id": f"{platform}-{i+1}",
-                "name_ar": f"{query} الذكي #{i+1}",
-                "name_en": f"Smart {query} #{i+1}",
-                "image": f"https://picsum.photos/300/200?random={i}",
-                "short_description": f"أحدث {query} في السوق بتقنيات متطورة وتصميم عصري",
-                "category": query,
-                "difficulty": "⭐" * (i % 3 + 1),
-                "why_win": "طلب مرتفع وتكلفة منخفضة وهامش ربح عالي",
-                "target": "شباب ومراهقين" if i % 2 == 0 else "عائلات ومحترفين",
-                "age_range": "18-35" if i % 2 == 0 else "25-45",
-                "gender": "ذكر" if i % 3 == 0 else "أنثى" if i % 3 == 1 else "كلا",
-                "interests": ["تسوق", "موضة", "تقنية", "لياقة بدنية"],
-                "problem": "يحل مشكلة الحاجة لمنتج عملي بجودة عالية وسعر معقول",
-                
-                "profit_analysis": {
-                    "purchase_price": base_price + (i * 20),
-                    "suggested_price": (base_price + (i * 20)) * 2,
-                    "profit_margin": "45%",
-                    "total_costs": (base_price + (i * 20)) * 0.3,
-                    "net_profit": (base_price + (i * 20)) * 0.7,
-                    "currency": currency
-                },
-                
-                "suppliers": {
-                    "local": [
-                        {
-                            "name": "مورد محلي #1",
-                            "contact": "0551234567",
-                            "link": "#"
-                        }
-                    ],
-                    "international": [
-                        {
-                            "name": "AliExpress",
-                            "link": "https://aliexpress.com",
-                            "min_order": "1 قطعة"
-                        }
-                    ],
-                    "shipping_days": "7-14 يوم",
-                    "min_order": "1 قطعة"
-                },
-                
-                "marketing": {
-                    "platform": "تيك توك وإنستغرام",
-                    "ad_copy": f"🔥 اكتشف أفضل {query} في السوق! 🔥\nجودة ممتازة ⭐ سعر لا يُنافس 🎯 توصيل سريع 🚚",
-                    "video_idea": "عرض عملي للمنتج مع مقارنة الأسعار والجودة",
-                    "hashtags": [f"#{query}", "#تسوق", "#عروض", "#جودة"],
-                    "ad_budget": f"{50 + i * 10} {currency}/يوم"
-                },
-                
-                "market_analysis": {
-                    "competition": "منخفض" if i % 3 == 0 else "متوسط" if i % 3 == 1 else "عالي",
-                    "demand": "مستمر" if i % 2 == 0 else "موسمي",
-                    "unique_point": "جودة عالية وسعر تنافسي وتصميم مميز",
-                    "growth_prediction": f"+{15 + i * 5}% خلال 2024"
-                },
-                
-                "tips": [
-                    "ركز على التسويق عبر منصات الفيديو القصيرة",
-                    "التقط صور احترافية للمنتج من زوايا متعددة",
-                    "قدم ضمان مجاني لأول 30 يوم",
-                    "استخدم التوصيل السريع كعامل تمييز"
-                ],
-                
-                "timestamp": datetime.now().isoformat(),
-                "source": platform,
-                "country": country,
-                "analyzed_by": "sample"
-            }
-            products.append(product)
-        
-        return products
-    
-def analyze_with_ai(self, query, country, platform):
-    """تحليل المنتجات باستخدام DeepSeek API"""
-    try:
-        # التأكد من وجود المفتاح
-        if not DEEPSEEK_API_KEY:
-            logger.warning("⚠️ DeepSeek API Key غير مضبوط")
-            return None
-        
-        # إعداد الطلب لـ DeepSeek API
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {DEEPSEEK_API_KEY}"
-        }
-        
-        data = {
-            "model": "deepseek-chat",
-            "messages": [
-                {
-                    "role": "system", 
-                    "content": "أنت محلل منتجات اقتصادي خبير في السوق العربي. قدم تحليلات واقعية وقابلة للتنفيذ."
-                },
-                {
-                    "role": "user", 
-                    "content": f"""
-                    قم بتحليل فرص الربح للمنتج: {query}
-                    للسوق: {country} على المنصة: {platform}
-                    
-                    المطلوب تحليل 3 منتجات مقترحة مع:
-                    - اسم عربي وإنجليزي للمنتج
-                    - وصف قصير
-                    - فئة المنتج
-                    - سبب الربحية
-                    - الجمهور المستهدف
-                    - الفئة العمرية
-                    - الاهتمامات
-                    - المشكلة التي يحلها
-                    - تحليل ربحي (سعر شراء، سعر بيع، هامش ربح)
-                    - نصائح تسويقية
-                    - تحليل السوق
-                    - نصائح الخبراء
-                    
-                    يجب أن تكون البيانات جاهزة للبرمجة ومنظمة.
-                    """
-                }
-            ],
-            "stream": False,
-            "temperature": 0.7,
-            "max_tokens": 2000
-        }
-        
-        # إرسال الطلب إلى DeepSeek API
-        response = requests.post(
-            "https://api.deepseek.com/chat/completions",
-            headers=headers,
-            json=data,
-            timeout=30
-        )
-        
-        # معالجة الرد
-        if response.status_code == 200:
-            result = response.json()
-            ai_text = result['choices'][0]['message']['content']
-            logger.info(f"✅ DeepSeek API responded successfully")
-            
-            # طباعة الرد لأغراض debugging
-            print("=== DeepSeek Response ===")
-            print(ai_text[:500])  # أول 500 حرف فقط
-            print("========================")
-            
-            return self.parse_deepseek_response(ai_text, query, country, platform)
-        else:
-            logger.error(f"❌ DeepSeek API error: {response.status_code} - {response.text}")
-            return None
-            
-    except Exception as e:
-        logger.error(f"❌ DeepSeek connection error: {str(e)}")
-        return None
-    
-    def parse_ai_response(self, ai_text, query, country, platform):
-        """محاولة تحويل رد الذكاء الاصطناعي لبيانات منظمة"""
+        # محاولة استخدام DeepSeek أولاً
         try:
-            # في الإصدار الحالي، نعود للبيانات التجريبية
-            # يمكنك تطوير هذا الجزء لتحليل النص لاحقاً
-            return self.generate_sample_data(query, country, platform)
-        except:
+            if DEEPSEEK_API_KEY:
+                logger.info("🔄 محاولة استخدام DeepSeek API...")
+                ai_products = self.analyze_with_ai(query, country, platform)
+                if ai_products:
+                    logger.info("✅ تم استخدام تحليل DeepSeek بنجاح")
+                    return ai_products
+                else:
+                    logger.warning("⚠️ DeepSeek return None, استخدام البيانات التجريبية")
+        except Exception as e:
+            logger.warning(f"⚠️ فشل التحليل بـ DeepSeek: {str(e)}")
+        
+        # العودة للبيانات التجريبية إذا فشل API
+        logger.info("🔄 استخدام البيانات التجريبية")
+        return self.generate_sample_data(query, country, platform)
+    
+    def analyze_with_ai(self, query, country, platform):
+        """تحليل المنتجات باستخدام DeepSeek API"""
+        try:
+            # التأكد من وجود المفتاح
+            if not DEEPSEEK_API_KEY:
+                logger.warning("⚠️ DeepSeek API Key غير مضبوط")
+                return None
+            
+            # إعداد الطلب لـ DeepSeek API
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {DEEPSEEK_API_KEY}"
+            }
+            
+            data = {
+                "model": "deepseek-chat",
+                "messages": [
+                    {
+                        "role": "system", 
+                        "content": "أنت محلل منتجات اقتصادي خبير في السوق العربي. قدم تحليلات واقعية وقابلة للتنفيذ."
+                    },
+                    {
+                        "role": "user", 
+                        "content": f"""
+                        قم بتحليل فرص الربح للمنتج: {query}
+                        للسوق: {country} على المنصة: {platform}
+                        
+                        المطلوب تحليل 3 منتجات مقترحة مع:
+                        - اسم عربي وإنجليزي للمنتج
+                        - وصف قصير
+                        - فئة المنتج
+                        - سبب الربحية
+                        - الجمهور المستهدف
+                        - الفئة العمرية
+                        - الاهتمامات
+                        - المشكلة التي يحلها
+                        - تحليل ربحي (سعر شراء، سعر بيع، هامش ربح)
+                        - نصائح تسويقية
+                        - تحليل السوق
+                        - نصائح الخبراء
+                        
+                        يجب أن تكون البيانات جاهزة للبرمجة ومنظمة.
+                        """
+                    }
+                ],
+                "stream": False,
+                "temperature": 0.7,
+                "max_tokens": 2000
+            }
+            
+            # إرسال الطلب إلى DeepSeek API
+            response = requests.post(
+                "https://api.deepseek.com/chat/completions",
+                headers=headers,
+                json=data,
+                timeout=30
+            )
+            
+            # معالجة الرد
+            if response.status_code == 200:
+                result = response.json()
+                ai_text = result['choices'][0]['message']['content']
+                logger.info(f"✅ DeepSeek API responded successfully")
+                
+                # طباعة الرد لأغراض debugging
+                print("=== DeepSeek Response ===")
+                print(ai_text[:500])  # أول 500 حرف فقط
+                print("========================")
+                
+                return self.parse_deepseek_response(ai_text, query, country, platform)
+            else:
+                logger.error(f"❌ DeepSeek API error: {response.status_code} - {response.text}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"❌ DeepSeek connection error: {str(e)}")
+            return None
+    
+    def parse_deepseek_response(self, ai_text, query, country, platform):
+        """تحويل رد DeepSeek إلى بيانات منظمة"""
+        try:
+            # في الإصدار الأول، نعود للبيانات التجريبية مع إشارة أن المصدر DeepSeek
+            products = self.generate_sample_data(query, country, platform)
+            
+            # نضيف إشارة أن البيانات من DeepSeek
+            for product in products:
+                product['analyzed_by'] = 'deepseek'
+                product['source'] = 'deepseek-api'
+                # إضافة الرد الخام للفحص
+                product['ai_raw_response'] = ai_text[:200] + "..." if len(ai_text) > 200 else ai_text
+                
+            logger.info(f"✅ تم معالجة رد DeepSeek، العودة لـ {len(products)} منتج")
+            return products
+            
+        except Exception as e:
+            logger.error(f"❌ Error parsing DeepSeek response: {str(e)}")
             return self.generate_sample_data(query, country, platform)
     
     def generate_sample_data(self, query, country, platform):
@@ -279,31 +214,11 @@ def analyze_with_ai(self, query, country, platform):
                 "timestamp": datetime.now().isoformat(),
                 "source": platform,
                 "country": country,
-                "analyzed_by": "openai" if openai.api_key else "sample"
+                "analyzed_by": "deepseek" if DEEPSEEK_API_KEY else "sample"
             }
             products.append(product)
         
         return products
-
-def parse_deepseek_response(self, ai_text, query, country, platform):
-    """تحويل رد DeepSeek إلى بيانات منظمة"""
-    try:
-        # في الإصدار الأول، نعود للبيانات التجريبية مع إشارة أن المصدر DeepSeek
-        products = self.generate_sample_data(query, country, platform)
-        
-        # نضيف إشارة أن البيانات من DeepSeek
-        for product in products:
-            product['analyzed_by'] = 'deepseek'
-            product['source'] = 'deepseek-api'
-            # إضافة الرد الخام للفحص
-            product['ai_raw_response'] = ai_text[:200] + "..." if len(ai_text) > 200 else ai_text
-            
-        logger.info(f"✅ تم معالجة رد DeepSeek، العودة لـ {len(products)} منتج")
-        return products
-        
-    except Exception as e:
-        logger.error(f"❌ Error parsing DeepSeek response: {str(e)}")
-        return self.generate_sample_data(query, country, platform)
 
 # تهيئة المحلل
 analyzer = SmartProductAnalyzer()
@@ -827,7 +742,7 @@ def serve_frontend():
                 elements.searchQuery.textContent = 'عنوان البحث: ' + data.query;
                 
                 // إظهار شارة AI إذا كان التحليل باستخدام الذكاء الاصطناعي
-                const hasAI = data.products.some(p => p.analyzed_by === 'openai');
+                const hasAI = data.products.some(p => p.analyzed_by === 'deepseek');
                 elements.aiBadge.style.display = hasAI ? 'inline-block' : 'none';
                 
                 elements.resultsContainer.innerHTML = '';
@@ -844,7 +759,7 @@ def serve_frontend():
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 
-                const aiBadge = product.analyzed_by === 'openai' ? 
+                const aiBadge = product.analyzed_by === 'deepseek' ? 
                     '<span class="ai-badge">تحليل بالذكاء الاصطناعي</span>' : '';
                 
                 card.innerHTML = `
@@ -1079,7 +994,7 @@ def health_check():
         "status": "running",
         "service": "Smart Product Analyzer",
         "timestamp": datetime.now().isoformat(),
-        "openai_available": bool(openai.api_key)
+        "deepseek_available": bool(DEEPSEEK_API_KEY)
     })
 
 if __name__ == '__main__':
